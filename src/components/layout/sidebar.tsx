@@ -44,30 +44,39 @@ export function Sidebar() {
 
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
 
+  const initials = session?.user?.name
+    ? session.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "?";
+
   return (
     <>
       {/* Mobile toggle */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card md:hidden"
+        className="fixed top-4 left-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card shadow-card md:hidden transition-all duration-150 hover:shadow-card-hover"
       >
         {open ? <X size={18} /> : <Menu size={18} />}
       </button>
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 transform border-r border-border bg-card transition-transform md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-64 transform border-r border-border bg-card transition-transform duration-200 md:translate-x-0 shadow-[2px_0_20px_rgba(0,0,0,0.06)] dark:shadow-[2px_0_20px_rgba(0,0,0,0.25)]",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold">
+        {/* Logo */}
+        <div className="flex h-16 items-center gap-3 border-b border-border px-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold text-base shadow-md ring-2 ring-blue-400/30 flex-shrink-0">
             S
           </div>
-          <span className="text-lg font-semibold">StockTrail</span>
+          <div>
+            <span className="text-[15px] font-semibold tracking-tight">StockTrail</span>
+            <p className="text-[10px] text-muted-foreground font-medium tracking-wide uppercase">Inventory</p>
+          </div>
         </div>
 
-        <nav className="flex flex-col gap-1 p-3">
+        {/* Nav */}
+        <nav className="flex flex-col gap-0.5 p-3">
           {items.map((item) => {
             const Icon = item.icon;
             const active = pathname?.startsWith(item.href);
@@ -77,30 +86,37 @@ export function Sidebar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary/10 text-primary border border-primary/20 shadow-sm"
+                    : "text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:translate-x-0.5"
                 )}
               >
-                <Icon size={18} />
+                <Icon size={17} className={active ? "text-primary" : ""} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        <div className="absolute bottom-0 w-full border-t border-border p-3">
-          <div className="mb-2 px-2 text-xs text-muted-foreground">
-            Signed in as <span className="font-medium text-foreground">{session?.user?.name}</span>
-            <br />
-            Role: {role}
+        {/* User footer */}
+        <div className="absolute bottom-0 w-full border-t border-border p-3 space-y-1">
+          <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold ring-1 ring-primary/20">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{session?.user?.name}</p>
+              <span className="inline-block text-[10px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                {role}
+              </span>
+            </div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-150"
           >
-            <LogOut size={18} />
+            <LogOut size={17} />
             Sign out
           </button>
         </div>
@@ -108,7 +124,7 @@ export function Sidebar() {
 
       {/* Overlay for mobile */}
       {open && (
-        <div className="fixed inset-0 z-30 bg-black/30 md:hidden" onClick={() => setOpen(false)} />
+        <div className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} />
       )}
     </>
   );
