@@ -11,6 +11,14 @@ import { CreateOrderDialog } from "@/components/orders/create-order-dialog";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+type BadgeVariant = "default" | "success" | "warning" | "destructive";
+
+const orderStatusVariant = (status: string): BadgeVariant => {
+  if (status === "COMPLETED") return "success";
+  if (status === "CANCELLED") return "destructive";
+  return "warning";
+};
+
 export default async function OrdersPage() {
   const session = await getServerSession(authOptions);
   await connectDB();
@@ -27,9 +35,12 @@ export default async function OrdersPage() {
   return (
     <div>
       <Topbar title="Orders" />
-      <div className="space-y-4 p-6">
+      <div className="mx-auto max-w-[1180px] space-y-5 p-6">
+
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{orders.length} orders</p>
+          <p className="text-[13px] font-medium" style={{ color: "var(--muted-raw)" }}>
+            {orders.length} order{orders.length !== 1 ? "s" : ""}
+          </p>
           {canCreate && <CreateOrderDialog products={toClient(products)} locations={toClient(locations)} />}
         </div>
 
@@ -41,7 +52,7 @@ export default async function OrdersPage() {
                   <TableHead>Order</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Items</TableHead>
-                  <TableHead>Total</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
@@ -49,27 +60,38 @@ export default async function OrdersPage() {
               <TableBody>
                 {orders.map((o: any) => (
                   <TableRow key={o.id}>
-                    <TableCell className="font-medium">#{o.id.slice(-8)}</TableCell>
-                    <TableCell>{o.customer?.name || "Walk-in"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {o.items.map((i: any) => `${i.product?.name} x${i.quantity}`).join(", ")}
+                    <TableCell className="font-mono font-semibold text-[12px]" style={{ color: "var(--primary-hex)" }}>
+                      #{o.id.slice(-8)}
                     </TableCell>
-                    <TableCell>{formatCurrency(o.totalAmount)}</TableCell>
+                    <TableCell className="font-medium text-[13px]" style={{ color: "var(--ink)" }}>
+                      {o.customer?.name || "Walk-in"}
+                    </TableCell>
+                    <TableCell className="text-[12px]" style={{ color: "var(--muted-raw)" }}>
+                      {o.items.map((i: any) => `${i.product?.name} ×${i.quantity}`).join(", ")}
+                    </TableCell>
+                    <TableCell className="text-right font-mono font-bold text-[13px]" style={{ color: "var(--ink)" }}>
+                      {formatCurrency(o.totalAmount)}
+                    </TableCell>
                     <TableCell>
-                      <Badge variant={o.status === "COMPLETED" ? "success" : o.status === "CANCELLED" ? "destructive" : "warning"}>
-                        {o.status}
-                      </Badge>
+                      <Badge variant={orderStatusVariant(o.status)}>{o.status}</Badge>
                     </TableCell>
-                    <TableCell>{formatDate(o.createdAt)}</TableCell>
+                    <TableCell className="text-[12px]" style={{ color: "var(--muted-raw)" }}>
+                      {formatDate(o.createdAt)}
+                    </TableCell>
                   </TableRow>
                 ))}
                 {orders.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-10">No orders yet.</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-sm" style={{ color: "var(--muted-raw)" }}>
+                      No orders yet.
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

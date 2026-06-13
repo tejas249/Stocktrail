@@ -18,26 +18,34 @@ export default async function SettingsPage() {
   return (
     <div>
       <Topbar title="Settings" />
-      <div className="space-y-6 p-6">
+      <div className="mx-auto max-w-[1180px] space-y-6 p-6">
+
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-foreground text-base font-semibold">Locations / Warehouses</CardTitle>
+            <CardTitle>Locations / Warehouses</CardTitle>
             <AddLocationDialog />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow><TableHead>Name</TableHead><TableHead>Address</TableHead></TableRow>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Address</TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {toClient(locations).map((l: any) => (
                   <TableRow key={l.id}>
-                    <TableCell className="font-medium">{l.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{l.address || "—"}</TableCell>
+                    <TableCell className="font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{l.name}</TableCell>
+                    <TableCell className="text-[13px]" style={{ color: "var(--muted-raw)" }}>{l.address || "—"}</TableCell>
                   </TableRow>
                 ))}
                 {locations.length === 0 && (
-                  <TableRow><TableCell colSpan={2} className="text-center text-muted-foreground py-6">No locations yet</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={2} className="py-8 text-center text-sm" style={{ color: "var(--muted-raw)" }}>
+                      No locations yet
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -45,24 +53,43 @@ export default async function SettingsPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-foreground text-base font-semibold">Team Members</CardTitle></CardHeader>
-          <CardContent>
+          <CardHeader>
+            <CardTitle>Team Members</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow><TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>Role</TableHead></TableRow>
+                <TableRow>
+                  <TableHead>Member</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {toClient(users).map((u: any) => (
                   <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                    <TableCell><UserRoleSelect userId={u.id} currentRole={u.role} /></TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+                          style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+                        >
+                          {u.name?.charAt(0)?.toUpperCase() ?? "?"}
+                        </div>
+                        <span className="font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{u.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-[13px]" style={{ color: "var(--muted-raw)" }}>{u.email}</TableCell>
+                    <TableCell>
+                      <UserRoleSelect userId={u.id} currentRole={u.role} />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

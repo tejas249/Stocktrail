@@ -2,6 +2,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/input";
+import { StatCard } from "@/components/ui/stat-card";
 import { connectDB, toClient } from "@/lib/mongodb";
 import { Product } from "@/lib/models/Product";
 import { Stock } from "@/lib/models/Stock";
@@ -44,7 +45,6 @@ export default async function DashboardPage() {
     totalStockValue += qty * p.costPrice;
   }
 
-  // movements over last 30 days, grouped by day
   const since = new Date();
   since.setDate(since.getDate() - 30);
   const movements = await StockMovement.find({ createdAt: { $gte: since } })
@@ -61,65 +61,70 @@ export default async function DashboardPage() {
   }
   const chartData = Array.from(chartMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
+  const movementBadge = (type: string) => {
+    if (type === "IN") return "movement-in" as const;
+    if (type === "TRANSFER_IN") return "movement-transfer-in" as const;
+    if (type === "OUT") return "movement-out" as const;
+    return "movement-transfer-out" as const;
+  };
+
   return (
     <div>
       <Topbar title="Dashboard" />
-      <div className="space-y-6 p-6">
+      <div className="mx-auto max-w-[1180px] space-y-6 p-6">
+
+        {/* KPI cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Total Products</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalProducts}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Low Stock Items</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{lowStockCount}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Total Stock Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalStockValue)}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle>Pending Purchase Orders</CardTitle>
-              <ClipboardList className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingPOs}</div>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Total Products"
+            value={String(totalProducts)}
+            icon={Package}
+            color="#7c3aed"
+          />
+          <StatCard
+            title="Low Stock Items"
+            value={String(lowStockCount)}
+            delta={lowStockCount > 0 ? `${lowStockCount} need restocking` : "All levels healthy"}
+            deltaPositive={lowStockCount === 0}
+            icon={AlertTriangle}
+            color="#f59e0b"
+          />
+          <StatCard
+            title="Total Stock Value"
+            value={formatCurrency(totalStockValue)}
+            icon={DollarSign}
+            color="#22c55e"
+          />
+          <StatCard
+            title="Pending Purchase Orders"
+            value={String(pendingPOs)}
+            icon={ClipboardList}
+            color="#9333ea"
+          />
         </div>
 
+        {/* Movements chart */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-foreground text-base font-semibold">Stock Movements (Last 30 Days)</CardTitle>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle>Stock Movements — Last 30 Days</CardTitle>
+            <span className="text-[12px] font-medium" style={{ color: "var(--muted-raw)" }}>30D</span>
           </CardHeader>
           <CardContent>
             <MovementsChart data={chartData} />
           </CardContent>
         </Card>
 
+        {/* Recent movements table */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-foreground text-base font-semibold">Recent Stock Movements</CardTitle>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle>Recent Stock Movements</CardTitle>
+            <a href="/movements" className="text-[12px] font-semibold hover:underline" style={{ color: "var(--primary-hex)" }}>
+              View all →
+            </a>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {recentMovements.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
+              <p className="px-6 py-10 text-center text-sm" style={{ color: "var(--muted-raw)" }}>
                 No stock movements yet. Record one from the Stock Movements page.
               </p>
             ) : (
@@ -129,7 +134,7 @@ export default async function DashboardPage() {
                     <TableHead>Product</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Quantity</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Date</TableHead>
                   </TableRow>
@@ -137,16 +142,42 @@ export default async function DashboardPage() {
                 <TableBody>
                   {recentMovements.map((m: any) => (
                     <TableRow key={m.id}>
-                      <TableCell className="font-medium">{m.product?.name}</TableCell>
-                      <TableCell>{m.location?.name}</TableCell>
                       <TableCell>
-                        <Badge variant={m.type === "IN" || m.type === "TRANSFER_IN" ? "success" : "warning"}>
-                          {m.type}
-                        </Badge>
+                        <p className="font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{m.product?.name}</p>
+                        {m.product?.sku && (
+                          <p className="font-mono text-[11px] mt-0.5" style={{ color: "var(--muted-2)" }}>{m.product.sku}</p>
+                        )}
                       </TableCell>
-                      <TableCell>{m.quantity}</TableCell>
-                      <TableCell>{m.user?.name}</TableCell>
-                      <TableCell>{formatDate(m.createdAt)}</TableCell>
+                      <TableCell>
+                        <span
+                          className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                          style={{ backgroundColor: "var(--line-2)", color: "var(--ink-2)" }}
+                        >
+                          {m.location?.name}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={movementBadge(m.type)}>{m.type}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-semibold text-[13px]" style={{
+                        color: (m.type === "IN" || m.type === "TRANSFER_IN") ? "var(--green)" : "var(--rose)"
+                      }}>
+                        {(m.type === "IN" || m.type === "TRANSFER_IN") ? "+" : "-"}{m.quantity}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                            style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+                          >
+                            {m.user?.name?.charAt(0)?.toUpperCase() ?? "?"}
+                          </div>
+                          <span className="text-[13px]" style={{ color: "var(--ink-2)" }}>{m.user?.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-[12px]" style={{ color: "var(--muted-raw)" }}>
+                        {formatDate(m.createdAt)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -154,6 +185,7 @@ export default async function DashboardPage() {
             )}
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

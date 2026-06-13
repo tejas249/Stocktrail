@@ -36,9 +36,11 @@ export default async function ProductsPage() {
   return (
     <div>
       <Topbar title="Products" />
-      <div className="space-y-4 p-6">
+      <div className="mx-auto max-w-[1180px] space-y-5 p-6">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{products.length} products in catalog</p>
+          <p className="text-[13px] font-medium" style={{ color: "var(--muted-raw)" }}>
+            {products.length} product{products.length !== 1 ? "s" : ""} in catalog
+          </p>
           {canEdit && (
             <div className="flex gap-2">
               <ImportProductsDialog />

@@ -29,24 +29,30 @@ export default async function TransfersPage() {
   return (
     <div>
       <Topbar title="Stock Transfers" />
-      <div className="space-y-6 p-6">
+      <div className="mx-auto max-w-[1180px] space-y-6 p-6">
+
         <Card>
-          <CardHeader><CardTitle className="text-foreground text-base font-semibold">New Transfer</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>New Transfer</CardTitle>
+          </CardHeader>
           <CardContent>
             <TransferForm products={toClient(products)} locations={toClient(locations)} />
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-foreground text-base font-semibold">Transfer History</CardTitle></CardHeader>
-          <CardContent>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle>Transfer History</CardTitle>
+            <span className="text-[12px] font-medium" style={{ color: "var(--muted-raw)" }}>Last 50</span>
+          </CardHeader>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Product</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Direction</TableHead>
-                  <TableHead>Quantity</TableHead>
+                  <TableHead className="text-right">Qty</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
@@ -54,25 +60,43 @@ export default async function TransfersPage() {
               <TableBody>
                 {transfers.map((t: any) => (
                   <TableRow key={t.id}>
-                    <TableCell className="font-medium">{t.product?.name}</TableCell>
-                    <TableCell>{t.location?.name}</TableCell>
                     <TableCell>
-                      <Badge variant={t.type === "TRANSFER_IN" ? "success" : "warning"}>
+                      <p className="font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{t.product?.name}</p>
+                      {t.product?.sku && (
+                        <p className="font-mono text-[11px] mt-0.5" style={{ color: "var(--muted-2)" }}>{t.product.sku}</p>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className="rounded-full px-2 py-0.5 text-[11px] font-medium" style={{ backgroundColor: "var(--line-2)", color: "var(--ink-2)" }}>
+                        {t.location?.name}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={t.type === "TRANSFER_IN" ? "movement-transfer-in" : "movement-transfer-out"}>
                         {t.type === "TRANSFER_IN" ? "Received" : "Sent"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{t.quantity}</TableCell>
-                    <TableCell>{t.user?.name}</TableCell>
-                    <TableCell>{formatDate(t.createdAt)}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold text-[13px]" style={{
+                      color: t.type === "TRANSFER_IN" ? "var(--sky)" : "var(--amber-c)"
+                    }}>
+                      {t.type === "TRANSFER_IN" ? "+" : "-"}{t.quantity}
+                    </TableCell>
+                    <TableCell className="text-[13px]" style={{ color: "var(--ink-2)" }}>{t.user?.name}</TableCell>
+                    <TableCell className="text-[12px]" style={{ color: "var(--muted-raw)" }}>{formatDate(t.createdAt)}</TableCell>
                   </TableRow>
                 ))}
                 {transfers.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No transfers yet</TableCell></TableRow>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-sm" style={{ color: "var(--muted-raw)" }}>
+                      No transfers yet
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

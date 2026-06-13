@@ -1,23 +1,54 @@
 "use client";
 
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from "recharts";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+  TooltipProps,
+} from "recharts";
+
+function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      className="rounded-xl border px-3 py-2.5 text-[12px] shadow-xl"
+      style={{ backgroundColor: "#1e1533", borderColor: "rgba(255,255,255,.1)", color: "#f1f5f9" }}
+    >
+      <p className="mb-1.5 font-semibold" style={{ color: "#94a3b8" }}>{label}</p>
+      {payload.map((entry) => (
+        <div key={entry.name} className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color as string }} />
+          <span style={{ color: "#c4cedd" }}>{entry.name}:</span>
+          <span className="font-bold ml-auto pl-3" style={{ color: entry.color as string }}>{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function MonthlyVolumeChart({ data }: { data: { month: string; in: number; out: number }[] }) {
   if (data.length === 0) {
-    return <p className="py-12 text-center text-sm text-muted-foreground">No movement data yet.</p>;
+    return <p className="py-12 text-center text-sm" style={{ color: "var(--muted-raw)" }}>No movement data yet.</p>;
   }
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-        <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-        <Tooltip
-          contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
+      <BarChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+        <CartesianGrid strokeDasharray="4 4" stroke="var(--line)" vertical={false} />
+        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--muted-2)" }} axisLine={false} tickLine={false} tickMargin={8} />
+        <YAxis tick={{ fontSize: 11, fill: "var(--muted-2)" }} axisLine={false} tickLine={false} tickMargin={8} />
+        <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(124,58,237,.05)" }} />
+        <Legend
+          wrapperStyle={{ fontSize: "12px", color: "var(--muted-raw)", paddingTop: "12px" }}
+          iconType="circle"
+          iconSize={8}
         />
-        <Legend />
-        <Bar dataKey="in" fill="#22c55e" name="Stock In" radius={[4, 4, 0, 0]} />
-        <Bar dataKey="out" fill="#ef4444" name="Stock Out" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="in" fill="#7c3aed" name="Stock In" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="out" fill="#f43f5e" name="Stock Out" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

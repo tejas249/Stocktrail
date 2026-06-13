@@ -1,5 +1,6 @@
 import { Topbar } from "@/components/layout/topbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/ui/stat-card";
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/lib/models/Product";
 import { Stock } from "@/lib/models/Stock";
@@ -9,6 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import { TopProductsChart } from "@/components/reports/top-products-chart";
 import { MonthlyVolumeChart } from "@/components/reports/monthly-volume-chart";
 import { ExportButton } from "@/components/reports/export-button";
+import { DollarSign, ArrowLeftRight, ClipboardList } from "lucide-react";
 
 export default async function ReportsPage() {
   await connectDB();
@@ -20,7 +22,6 @@ export default async function ReportsPage() {
     PurchaseOrder.find().populate("supplier").lean(),
   ]);
 
-  // Fastest / slowest moving: total OUT quantity per product
   const movementByProduct = new Map<string, { name: string; out: number }>();
   for (const m of movements as any[]) {
     if (m.type !== "OUT") continue;
@@ -33,7 +34,6 @@ export default async function ReportsPage() {
   const fastest = sorted.slice(0, 10);
   const slowest = [...sorted].reverse().slice(0, 10);
 
-  // Monthly in/out volume
   const monthlyMap = new Map<string, { month: string; in: number; out: number }>();
   for (const m of movements as any[]) {
     const key = new Date(m.createdAt).toISOString().slice(0, 7);
@@ -44,7 +44,6 @@ export default async function ReportsPage() {
   }
   const monthlyData = Array.from(monthlyMap.values()).sort((a, b) => a.month.localeCompare(b.month));
 
-  // Top suppliers by PO volume
   const supplierMap = new Map<string, { name: string; orders: number; totalQty: number }>();
   for (const po of purchaseOrders as any[]) {
     const key = po.supplier?._id?.toString() || po.supplier?.toString();
@@ -55,76 +54,86 @@ export default async function ReportsPage() {
   }
   const topSuppliers = Array.from(supplierMap.values()).sort((a, b) => b.orders - a.orders).slice(0, 10);
 
-  // Stock value snapshot
   const stockByProduct = new Map<string, number>();
   for (const s of stocks as any[]) {
     const key = s.product.toString();
     stockByProduct.set(key, (stockByProduct.get(key) || 0) + s.quantity);
   }
   const totalStockValue = (products as any[]).reduce((sum, p) => {
-    const qty = stockByProduct.get(p._id.toString()) || 0;
-    return sum + qty * p.costPrice;
+    return sum + (stockByProduct.get(p._id.toString()) || 0) * p.costPrice;
   }, 0);
 
   return (
     <div>
       <Topbar title="Reports" />
-      <div className="space-y-6 p-6">
+      <div className="mx-auto max-w-[1180px] space-y-6 p-6">
+
         <div className="flex justify-end">
           <ExportButton />
         </div>
 
+        {/* Summary KPIs */}
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <CardHeader><CardTitle>Current Stock Value</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-bold">{formatCurrency(totalStockValue)}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle>Total Movements Recorded</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-bold">{movements.length}</CardContent>
-          </Card>
-          <Card>
-            <CardHeader><CardTitle>Total Purchase Orders</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-bold">{purchaseOrders.length}</CardContent>
-          </Card>
+          <StatCard title="Current Stock Value" value={formatCurrency(totalStockValue)} icon={DollarSign} color="#22c55e" />
+          <StatCard title="Total Movements Recorded" value={String(movements.length)} icon={ArrowLeftRight} color="#7c3aed" />
+          <StatCard title="Total Purchase Orders" value={String(purchaseOrders.length)} icon={ClipboardList} color="#9333ea" />
         </div>
 
+        {/* Charts */}
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <CardHeader><CardTitle className="text-foreground text-base font-semibold">Fastest Moving Products (by units sold/out)</CardTitle></CardHeader>
-            <CardContent><TopProductsChart data={fastest} color="#22c55e" /></CardContent>
+            <CardHeader>
+              <CardTitle>Fastest Moving Products</CardTitle>
+              <p className="text-[12px] mt-0.5" style={{ color: "var(--muted-raw)" }}>By units out</p>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <TopProductsChart data={fastest} color="#7c3aed" />
+            </CardContent>
           </Card>
           <Card>
-            <CardHeader><CardTitle className="text-foreground text-base font-semibold">Slowest Moving Products</CardTitle></CardHeader>
-            <CardContent><TopProductsChart data={slowest} color="#ef4444" /></CardContent>
+            <CardHeader>
+              <CardTitle>Slowest Moving Products</CardTitle>
+              <p className="text-[12px] mt-0.5" style={{ color: "var(--muted-raw)" }}>Lowest outbound volume</p>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <TopProductsChart data={slowest} color="#f43f5e" />
+            </CardContent>
           </Card>
         </div>
 
         <Card>
-          <CardHeader><CardTitle className="text-foreground text-base font-semibold">Monthly Stock In/Out Volume</CardTitle></CardHeader>
-          <CardContent><MonthlyVolumeChart data={monthlyData} /></CardContent>
+          <CardHeader>
+            <CardTitle>Monthly Stock In / Out Volume</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <MonthlyVolumeChart data={monthlyData} />
+          </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-foreground text-base font-semibold">Top Suppliers by PO Volume</CardTitle></CardHeader>
-          <CardContent>
+          <CardHeader>
+            <CardTitle>Top Suppliers by PO Volume</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             {topSuppliers.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No purchase order data yet.</p>
+              <p className="px-6 py-8 text-center text-sm" style={{ color: "var(--muted-raw)" }}>
+                No purchase order data yet.
+              </p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-muted-foreground">
-                    <th className="py-2">Supplier</th>
-                    <th className="py-2">Orders</th>
-                    <th className="py-2">Total Units Ordered</th>
+                  <tr style={{ borderBottom: "1px solid var(--line-2)", backgroundColor: "var(--bg)" }}>
+                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted-2)" }}>Supplier</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted-2)" }}>Orders</th>
+                    <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted-2)" }}>Total Units</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
-                  {topSuppliers.map((s) => (
-                    <tr key={s.name}>
-                      <td className="py-2 font-medium">{s.name}</td>
-                      <td className="py-2">{s.orders}</td>
-                      <td className="py-2">{s.totalQty}</td>
+                <tbody>
+                  {topSuppliers.map((s, i) => (
+                    <tr key={s.name} style={{ borderBottom: i < topSuppliers.length - 1 ? "1px solid var(--line-2)" : undefined }}>
+                      <td className="px-6 py-3 font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{s.name}</td>
+                      <td className="px-6 py-3 text-right font-mono text-[13px]" style={{ color: "var(--ink-2)" }}>{s.orders}</td>
+                      <td className="px-6 py-3 text-right font-mono font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{s.totalQty}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -132,6 +141,7 @@ export default async function ReportsPage() {
             )}
           </CardContent>
         </Card>
+
       </div>
     </div>
   );

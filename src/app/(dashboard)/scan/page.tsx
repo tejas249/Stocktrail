@@ -11,11 +11,11 @@ export default async function ScanPage() {
   return (
     <div>
       <Topbar title="Scan Barcode" />
-      <div className="space-y-4 p-6">
+      <div className="mx-auto max-w-[1180px] space-y-5 p-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-foreground text-base font-semibold">Scan a product barcode</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <CardTitle>Scan a product barcode</CardTitle>
+            <p className="text-[13px] mt-1" style={{ color: "var(--muted-raw)" }}>
               Use your device camera to scan a product&apos;s barcode. We&apos;ll look it up and let you quickly record a stock movement.
             </p>
           </CardHeader>
