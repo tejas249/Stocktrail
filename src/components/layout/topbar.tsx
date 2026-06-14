@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import { Search, Bell, Layers, LayoutGrid, Zap, Gem, ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useLayoutMode, type LayoutMode } from "./layout-mode";
@@ -13,6 +14,20 @@ const MODES: { id: LayoutMode; icon: React.ElementType; label: string }[] = [
 export function Topbar({ title, actions }: { title: string; actions?: React.ReactNode }) {
   const { data: session } = useSession();
   const { mode, setMode, isGlass, toggleGlass } = useLayoutMode();
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "/" || ((e.metaKey || e.ctrlKey) && e.key === "k")) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const initials = session?.user?.name
     ? session.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -92,9 +107,9 @@ export function Topbar({ title, actions }: { title: string; actions?: React.Reac
               <button
                 key={id}
                 onClick={() => setMode(id)}
-                title={label}
                 aria-label={label}
-                className="flex items-center justify-center rounded-[5px] w-7 h-[22px] transition-all duration-150"
+                data-tooltip-below={label}
+                className="flex items-center justify-center rounded-[5px] w-7 h-[22px] transition-all duration-150 active:scale-[0.90] cursor-pointer"
                 style={
                   mode === id
                     ? { backgroundColor: "var(--primary-hex)", color: "#fff" }
@@ -108,9 +123,9 @@ export function Topbar({ title, actions }: { title: string; actions?: React.Reac
 
           <button
             onClick={toggleGlass}
-            title={isGlass ? "Disable Glass" : "Enable Glass"}
             aria-label="Toggle Glassmorphism"
-            className="flex items-center justify-center rounded-[7px] w-[30px] h-[30px] border transition-all duration-300"
+            data-tooltip-below={isGlass ? "Disable Glass" : "Enable Glass"}
+            className="flex items-center justify-center rounded-[7px] w-[30px] h-[30px] border transition-all duration-300 active:scale-[0.90] cursor-pointer"
             style={
               isGlass
                 ? { backgroundColor: "rgba(139,92,246,0.15)", borderColor: "rgba(139,92,246,0.40)", color: "#c4b5fd" }
@@ -135,6 +150,7 @@ export function Topbar({ title, actions }: { title: string; actions?: React.Reac
         >
           <Search size={12} style={{ color: "var(--muted-2)", flexShrink: 0 }} />
           <input
+            ref={searchRef}
             placeholder="Search…"
             className="bg-transparent outline-none flex-1 text-[12px] placeholder:text-[var(--muted-2)]"
             style={{ color: "var(--ink)" }}
@@ -143,13 +159,14 @@ export function Topbar({ title, actions }: { title: string; actions?: React.Reac
 
         {/* Bell */}
         <button
-          className="relative flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border transition-all duration-150 hover:bg-[var(--hover)]"
+          className="relative flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[7px] border transition-all duration-150 hover:bg-[var(--hover)] active:scale-[0.90]"
           style={
             isGlass
               ? { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)" }
               : { borderColor: "var(--line)", backgroundColor: "transparent" }
           }
           aria-label="Notifications"
+          data-tooltip-below="Notifications"
         >
           <Bell size={14} style={{ color: "var(--muted-raw)" }} />
           <span

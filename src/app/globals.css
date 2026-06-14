@@ -94,6 +94,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted-2);
+    user-select: none;
   }
 
   .font-mono {
@@ -116,6 +117,7 @@
     font-weight: 600;
     font-size: 11.5px;
     letter-spacing: 0.01em;
+    user-select: none;
   }
 
   /* Remove dashed border on last table row */
@@ -228,4 +230,163 @@
 [data-glass="true"] input::placeholder,
 [data-glass="true"] textarea::placeholder {
   color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* ── Micro-interaction keyframes ─────────────────────── */
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  60% { transform: scale(1.20); }
+}
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes dialog-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
+}
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes error-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Global focus rings ── */
+*:focus-visible {
+  outline: 2px solid rgba(4, 159, 217, 0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none; /* inputs use border+shadow focus ring from component */
+}
+
+/* ── CSS Tooltips ── */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms 80ms;
+  z-index: 999;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
+[data-tooltip-below] {
+  position: relative;
+}
+[data-tooltip-below]::after {
+  content: attr(data-tooltip-below);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms 80ms;
+  z-index: 999;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+[data-tooltip-below]:hover::after {
+  opacity: 1;
+}
+
+/* ── Skeleton shimmer ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--line) 25%, var(--hover) 50%, var(--line) 75%);
+  background-size: 400px 100%;
+  animation: skeleton-shimmer 1.5s ease infinite;
+  border-radius: 6px;
+}
+
+/* ── Field validation error animation ── */
+.field-error {
+  animation: error-slide-in 150ms ease;
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ── Alert badge pulse ── */
+.badge-pulse {
+  animation: pulse-badge 2.5s ease-in-out infinite;
+  display: inline-flex;
+}
+
+/* ── Warning/critical status badge pulse ── */
+.badge-warn-pulse {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+/* ── Card hover border glow ── */
+[data-card] {
+  transition: border-color 150ms ease;
+}
+[data-card]:hover {
+  border-color: rgba(4, 159, 217, 0.22) !important;
+}
+
+/* ── Stat card hover lift ── */
+[data-stat-card] {
+  cursor: pointer;
+  transition: border-color 150ms ease, transform 150ms ease;
+}
+[data-stat-card]:hover {
+  transform: translateY(-2px);
+}
+[data-stat-card]:not([data-warn]):hover {
+  border-color: rgba(4, 159, 217, 0.25) !important;
+}
+
+/* ── Nav icon nudge on hover ── */
+[data-nav-link] [data-nav-icon] {
+  transition: transform 150ms ease;
+}
+[data-nav-link]:hover [data-nav-icon] {
+  transform: translateX(2px);
 }

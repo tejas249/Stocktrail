@@ -85,7 +85,12 @@ export function LocationCombobox({ label, dbLocations, value, onChange, placehol
       {open && (
         <div
           className="absolute left-0 top-full z-50 mt-1 w-72 rounded-[12px] border bg-white overflow-hidden"
-          style={{ borderColor: "var(--line)", boxShadow: "var(--shadow-pop)" }}
+          style={{
+            borderColor: "var(--line)",
+            boxShadow: "var(--shadow-pop)",
+            animation: "dropdown-in 160ms cubic-bezier(0.16,1,0.3,1)",
+            transformOrigin: "top center",
+          }}
         >
           {/* Search */}
           <div className="p-2" style={{ borderBottom: "1px solid var(--line-2)" }}>

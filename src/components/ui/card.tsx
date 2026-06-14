@@ -10,7 +10,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
         "rounded-2xl border bg-white text-card-foreground",
         className
       )}
-      style={{ borderColor: "var(--line)" }}
+      style={{ borderColor: "var(--line)", transition: "border-color 150ms ease" }}
       {...props}
     />
   )

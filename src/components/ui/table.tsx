@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
@@ -34,7 +35,7 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
     <tr
       ref={ref}
       className={cn(
-        "transition-colors duration-100 hover:bg-[var(--hover)]",
+        "cursor-pointer transition-colors duration-150 hover:bg-[var(--hover)]",
         className
       )}
       style={{ borderBottom: "1px dashed var(--line-2)", ...style }}
@@ -44,24 +45,45 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
 );
 TableRow.displayName = "TableRow";
 
-const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<HTMLTableCellElement>>(
-  ({ className, ...props }, ref) => (
-    <th
-      ref={ref}
-      className={cn(
-        "px-4 py-[10px] text-left align-middle text-[10.5px] font-bold uppercase whitespace-nowrap",
-        className
-      )}
-      style={{ color: "var(--muted-2)", letterSpacing: "0.7px", borderBottom: "1px solid var(--line)" }}
-      {...props}
-    />
-  )
-);
+const TableHead = React.forwardRef<
+  HTMLTableCellElement,
+  React.ThHTMLAttributes<HTMLTableCellElement> & { sortable?: boolean }
+>(({ className, sortable, children, ...props }, ref) => (
+  <th
+    ref={ref}
+    className={cn(
+      "px-4 py-[10px] text-left align-middle text-[10.5px] font-bold uppercase whitespace-nowrap group",
+      sortable && "cursor-pointer hover:text-[var(--ink-2)]",
+      className
+    )}
+    style={{ color: "var(--muted-2)", letterSpacing: "0.7px", borderBottom: "1px solid var(--line)", transition: "color 150ms" }}
+    {...props}
+  >
+    {sortable ? (
+      <span className="inline-flex items-center gap-1.5">
+        {children}
+        <ArrowUpDown
+          size={10}
+          className="opacity-0 group-hover:opacity-40 transition-opacity duration-150"
+          aria-hidden
+        />
+      </span>
+    ) : children}
+  </th>
+));
 TableHead.displayName = "TableHead";
 
 const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
-  ({ className, ...props }, ref) => (
-    <td ref={ref} className={cn("px-4 py-[13px] align-middle text-[13.5px]", className)} style={{ color: "var(--ink-2)" }} {...props} />
+  ({ className, children, title, ...props }, ref) => (
+    <td
+      ref={ref}
+      className={cn("px-4 py-[13px] align-middle text-[13.5px]", className)}
+      style={{ color: "var(--ink-2)" }}
+      title={title}
+      {...props}
+    >
+      {children}
+    </td>
   )
 );
 TableCell.displayName = "TableCell";

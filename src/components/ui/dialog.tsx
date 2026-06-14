@@ -10,10 +10,12 @@ const DialogTrigger = DialogPrimitive.Trigger;
 function DialogContent({ className, children, ...props }: DialogPrimitive.DialogContentProps) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-[overlay-in_150ms_ease] data-[state=closed]:animate-[overlay-out_100ms_ease]" />
       <DialogPrimitive.Content
         className={cn(
           "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-white p-6",
+          "data-[state=open]:animate-[dialog-in_200ms_cubic-bezier(0.16,1,0.3,1)]",
+          "data-[state=closed]:animate-[dialog-out_150ms_ease]",
           className
         )}
         style={{

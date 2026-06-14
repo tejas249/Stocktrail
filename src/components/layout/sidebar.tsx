@@ -79,7 +79,7 @@ export function Sidebar({ iconOnly = false, alertCount = 0 }: { iconOnly?: boole
       <button
         data-mobile-menu=""
         onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-xl md:hidden"
+        className="fixed top-4 left-4 z-50 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl transition-all duration-150 active:scale-[0.95] md:hidden"
         style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
       >
         {open
@@ -143,7 +143,7 @@ export function Sidebar({ iconOnly = false, alertCount = 0 }: { iconOnly?: boole
                 {/* Section header — hidden in icon-only mode */}
                 {!iconOnly && (
                   <p
-                    className="label-caps"
+                    className="label-caps select-none"
                     style={{ padding: gi === 0 ? "8px 10px 4px" : "16px 10px 4px" }}
                   >
                     {group.label}
@@ -164,9 +164,10 @@ export function Sidebar({ iconOnly = false, alertCount = 0 }: { iconOnly?: boole
                         key={item.href}
                         href={item.href}
                         onClick={() => setOpen(false)}
-                        title={iconOnly ? item.label : undefined}
+                        data-nav-link=""
+                        data-tooltip={iconOnly ? item.label : undefined}
                         className={cn(
-                          "flex items-center rounded-[8px] text-[13px] transition-all duration-100",
+                          "flex items-center rounded-[8px] text-[13px] transition-all duration-150 active:scale-[0.98]",
                           iconOnly ? "justify-center px-2 py-[9px]" : "gap-[9px] px-[9px] py-[7px]"
                         )}
                         style={
@@ -191,20 +192,26 @@ export function Sidebar({ iconOnly = false, alertCount = 0 }: { iconOnly?: boole
                           }
                         }}
                       >
-                        <Icon
-                          size={16}
-                          strokeWidth={active ? 2.2 : 1.9}
-                          style={{
-                            color: active ? "var(--primary-hex)" : "var(--muted-raw)",
-                            flexShrink: 0,
-                          }}
-                        />
-                        {!iconOnly && (
-                          <span className="flex-1 truncate">{item.label}</span>
-                        )}
+                        <span data-nav-icon="" className="flex flex-shrink-0 items-center">
+                          <Icon
+                            size={16}
+                            strokeWidth={active ? 2.2 : 1.9}
+                            style={{ color: active ? "var(--primary-hex)" : "var(--muted-raw)" }}
+                          />
+                        </span>
+                        <span
+                          className={cn(
+                            "truncate transition-all duration-200",
+                            iconOnly ? "w-0 max-w-0 opacity-0 overflow-hidden" : "flex-1 opacity-100"
+                          )}
+                          style={{ transitionDelay: iconOnly ? "0ms" : "100ms" }}
+                          aria-hidden={iconOnly}
+                        >
+                          {item.label}
+                        </span>
                         {!iconOnly && item.href === "/alerts" && alertCount > 0 && (
                           <span
-                            className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                            className="badge-pulse flex h-[17px] min-w-[17px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
                             style={{ backgroundColor: "#ef4444", flexShrink: 0 }}
                           >
                             {alertCount > 99 ? "99+" : alertCount}
@@ -278,12 +285,14 @@ export function Sidebar({ iconOnly = false, alertCount = 0 }: { iconOnly?: boole
         </div>
       </aside>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      <div
+        className={cn(
+          "fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden transition-opacity duration-150",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => setOpen(false)}
+        aria-hidden={!open}
+      />
     </>
   );
 }

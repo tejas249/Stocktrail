@@ -100,6 +100,8 @@ export function PageStatsRow({ stats }: { stats: StatConfig[] }) {
           /* Default light variant */
           <div
             key={stat.title}
+            data-stat-card=""
+            data-warn={stat.warn ? "" : undefined}
             style={{
               background: stat.warn ? "#fffbeb" : "#ffffff",
               border: `1px solid ${stat.warn ? "#fde68a" : "var(--line)"}`,
