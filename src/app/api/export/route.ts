@@ -5,6 +5,7 @@ import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/lib/models/Product";
 import { Stock } from "@/lib/models/Stock";
 import { StockMovement } from "@/lib/models/StockMovement";
+import "@/lib/models/Supplier"; // register for populate("supplier")
 
 function toCsv(rows: Record<string, any>[]) {
   if (rows.length === 0) return "";

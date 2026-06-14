@@ -1,16 +1,10 @@
-import { Topbar } from "@/components/layout/topbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatCard } from "@/components/ui/stat-card";
 import { connectDB } from "@/lib/mongodb";
 import { Product } from "@/lib/models/Product";
 import { Stock } from "@/lib/models/Stock";
 import { StockMovement } from "@/lib/models/StockMovement";
 import { PurchaseOrder } from "@/lib/models/PurchaseOrder";
-import { formatCurrency } from "@/lib/utils";
-import { TopProductsChart } from "@/components/reports/top-products-chart";
-import { MonthlyVolumeChart } from "@/components/reports/monthly-volume-chart";
-import { ExportButton } from "@/components/reports/export-button";
-import { DollarSign, ArrowLeftRight, ClipboardList } from "lucide-react";
+import "@/lib/models/Supplier"; // register for populate("supplier")
+import { ReportsPageClient } from "@/components/pages/reports-client";
 
 export default async function ReportsPage() {
   await connectDB();
@@ -30,7 +24,7 @@ export default async function ReportsPage() {
     entry.out += m.quantity;
     movementByProduct.set(key, entry);
   }
-  const sorted = Array.from(movementByProduct.values()).sort((a, b) => b.out - a.out);
+  const sorted  = Array.from(movementByProduct.values()).sort((a, b) => b.out - a.out);
   const fastest = sorted.slice(0, 10);
   const slowest = [...sorted].reverse().slice(0, 10);
 
@@ -64,85 +58,14 @@ export default async function ReportsPage() {
   }, 0);
 
   return (
-    <div>
-      <Topbar title="Reports" />
-      <div className="mx-auto max-w-[1180px] space-y-6 p-6">
-
-        <div className="flex justify-end">
-          <ExportButton />
-        </div>
-
-        {/* Summary KPIs */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <StatCard title="Current Stock Value" value={formatCurrency(totalStockValue)} icon={DollarSign} color="#22c55e" />
-          <StatCard title="Total Movements Recorded" value={String(movements.length)} icon={ArrowLeftRight} color="#7c3aed" />
-          <StatCard title="Total Purchase Orders" value={String(purchaseOrders.length)} icon={ClipboardList} color="#9333ea" />
-        </div>
-
-        {/* Charts */}
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Fastest Moving Products</CardTitle>
-              <p className="text-[12px] mt-0.5" style={{ color: "var(--muted-raw)" }}>By units out</p>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <TopProductsChart data={fastest} color="#7c3aed" />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Slowest Moving Products</CardTitle>
-              <p className="text-[12px] mt-0.5" style={{ color: "var(--muted-raw)" }}>Lowest outbound volume</p>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <TopProductsChart data={slowest} color="#f43f5e" />
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Stock In / Out Volume</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <MonthlyVolumeChart data={monthlyData} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Suppliers by PO Volume</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {topSuppliers.length === 0 ? (
-              <p className="px-6 py-8 text-center text-sm" style={{ color: "var(--muted-raw)" }}>
-                No purchase order data yet.
-              </p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ borderBottom: "1px solid var(--line-2)", backgroundColor: "var(--bg)" }}>
-                    <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted-2)" }}>Supplier</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted-2)" }}>Orders</th>
-                    <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted-2)" }}>Total Units</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topSuppliers.map((s, i) => (
-                    <tr key={s.name} style={{ borderBottom: i < topSuppliers.length - 1 ? "1px solid var(--line-2)" : undefined }}>
-                      <td className="px-6 py-3 font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{s.name}</td>
-                      <td className="px-6 py-3 text-right font-mono text-[13px]" style={{ color: "var(--ink-2)" }}>{s.orders}</td>
-                      <td className="px-6 py-3 text-right font-mono font-semibold text-[13px]" style={{ color: "var(--ink)" }}>{s.totalQty}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </CardContent>
-        </Card>
-
-      </div>
-    </div>
+    <ReportsPageClient
+      fastest={fastest}
+      slowest={slowest}
+      monthlyData={monthlyData}
+      topSuppliers={topSuppliers}
+      totalStockValue={totalStockValue}
+      movementsCount={movements.length}
+      purchaseOrdersCount={purchaseOrders.length}
+    />
   );
 }

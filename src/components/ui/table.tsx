@@ -3,10 +3,7 @@ import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div
-      className="w-full overflow-auto rounded-2xl border"
-      style={{ borderColor: "var(--line)", boxShadow: "var(--shadow-card)" }}
-    >
+    <div className="w-full overflow-x-auto">
       <table ref={ref} className={cn("w-full caption-bottom text-sm bg-white", className)} {...props} />
     </div>
   )
@@ -33,14 +30,14 @@ const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes
 TableBody.displayName = "TableBody";
 
 const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTMLTableRowElement>>(
-  ({ className, ...props }, ref) => (
+  ({ className, style, ...props }, ref) => (
     <tr
       ref={ref}
       className={cn(
-        "border-b transition-colors duration-100 odd:bg-white even:bg-[#fafafe] hover:bg-[var(--hover)]",
+        "transition-colors duration-100 hover:bg-[var(--hover)]",
         className
       )}
-      style={{ borderColor: "var(--line-2)" }}
+      style={{ borderBottom: "1px dashed var(--line-2)", ...style }}
       {...props}
     />
   )
@@ -52,10 +49,10 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        "h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider",
+        "px-4 py-[10px] text-left align-middle text-[10.5px] font-bold uppercase whitespace-nowrap",
         className
       )}
-      style={{ color: "var(--muted-2)" }}
+      style={{ color: "var(--muted-2)", letterSpacing: "0.7px", borderBottom: "1px solid var(--line)" }}
       {...props}
     />
   )
@@ -64,7 +61,7 @@ TableHead.displayName = "TableHead";
 
 const TableCell = React.forwardRef<HTMLTableCellElement, React.TdHTMLAttributes<HTMLTableCellElement>>(
   ({ className, ...props }, ref) => (
-    <td ref={ref} className={cn("px-4 py-3 align-middle", className)} style={{ color: "var(--ink-2)" }} {...props} />
+    <td ref={ref} className={cn("px-4 py-[13px] align-middle text-[13.5px]", className)} style={{ color: "var(--ink-2)" }} {...props} />
   )
 );
 TableCell.displayName = "TableCell";

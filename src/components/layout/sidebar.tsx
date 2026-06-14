@@ -22,34 +22,52 @@ import {
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "next-auth/react";
 
-const NAV_ITEMS = [
-  { href: "/dashboard",       label: "Dashboard",          icon: LayoutDashboard, color: "#7c3aed" },
-  { href: "/products",        label: "Products",           icon: Package,         color: "#9333ea" },
-  { href: "/movements",       label: "Stock Movements",    icon: ArrowLeftRight,  color: "#0ea5e9" },
-  { href: "/transfers",       label: "Transfers",          icon: Repeat,          color: "#0d9488" },
-  { href: "/suppliers",       label: "Suppliers",          icon: Truck,           color: "#f97316" },
-  { href: "/purchase-orders", label: "Purchase Orders",    icon: ClipboardList,   color: "#f59e0b" },
-  { href: "/orders",          label: "Orders",             icon: ShoppingCart,    color: "#22c55e" },
-  { href: "/reports",         label: "Reports",            icon: BarChart3,       color: "#ec4899" },
-  { href: "/alerts",          label: "Low Stock Alerts",   icon: AlertTriangle,   color: "#ef4444", roles: ["ADMIN", "STAFF"] },
-  { href: "/scan",            label: "Scan Barcode",       icon: ScanLine,        color: "#64748b", roles: ["ADMIN", "STAFF"] },
-  { href: "/settings",        label: "Settings",           icon: Settings,        color: "#94a3b8", roles: ["ADMIN"] },
-];
-
-function hexToRgba(hex: string, alpha: number) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  roles?: string[];
 }
 
-export function Sidebar() {
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Core",
+    items: [
+      { href: "/dashboard",  label: "Dashboard",       icon: LayoutDashboard },
+      { href: "/products",   label: "Products",        icon: Package },
+      { href: "/movements",  label: "Stock Movements", icon: ArrowLeftRight },
+      { href: "/transfers",  label: "Transfers",       icon: Repeat },
+      { href: "/orders",     label: "Orders",          icon: ShoppingCart },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/alerts", label: "Low Stock Alerts", icon: AlertTriangle, roles: ["ADMIN", "STAFF"] },
+      { href: "/scan",   label: "Scan Barcode",     icon: ScanLine,      roles: ["ADMIN", "STAFF"] },
+    ],
+  },
+  {
+    label: "Admin",
+    items: [
+      { href: "/suppliers",       label: "Suppliers",       icon: Truck,         roles: ["ADMIN"] },
+      { href: "/purchase-orders", label: "Purchase Orders", icon: ClipboardList, roles: ["ADMIN"] },
+      { href: "/reports",         label: "Reports",         icon: BarChart3,     roles: ["ADMIN"] },
+      { href: "/settings",        label: "Settings",        icon: Settings,      roles: ["ADMIN"] },
+    ],
+  },
+];
+
+export function Sidebar({ iconOnly = false, alertCount = 0 }: { iconOnly?: boolean; alertCount?: number }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const role = session?.user?.role ?? "VIEWER";
   const [open, setOpen] = useState(false);
-
-  const items = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role));
 
   const initials = session?.user?.name
     ? session.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -59,130 +77,212 @@ export function Sidebar() {
     <>
       {/* Mobile toggle */}
       <button
+        data-mobile-menu=""
         onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-xl border md:hidden transition-colors duration-150"
-        style={{ borderColor: "var(--line)", backgroundColor: "var(--bg)" }}
+        className="fixed top-4 left-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-xl md:hidden"
+        style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
       >
-        {open ? <X size={17} style={{ color: "var(--ink)" }} /> : <Menu size={17} style={{ color: "var(--ink)" }} />}
+        {open
+          ? <X size={17} style={{ color: "var(--ink)" }} />
+          : <Menu size={17} style={{ color: "var(--ink)" }} />}
       </button>
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 md:translate-x-0 flex flex-col",
+          "fixed inset-y-0 left-0 z-40 transform transition-all duration-200 md:translate-x-0 flex flex-col",
+          iconOnly ? "w-14" : "w-64",
           open ? "translate-x-0" : "-translate-x-full"
         )}
         style={{
-          background: "linear-gradient(185deg, #fafbfc 0%, #f5f7fa 100%)",
-          boxShadow: "4px 0 16px rgba(15,23,42,0.08)",
+          background: "var(--surface)",
+          borderRight: "1px solid var(--line)",
         }}
       >
-        {/* Logo */}
+        {/* Brand */}
         <div
-          className="flex h-16 flex-shrink-0 items-center gap-3 px-5"
+          data-sidebar-brand=""
+          className={cn(
+            "flex h-16 flex-shrink-0 items-center gap-3",
+            iconOnly ? "px-[11px] justify-center" : "px-5"
+          )}
           style={{ borderBottom: "1px solid var(--line)" }}
         >
           <div
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl font-bold text-[15px] text-white"
-            style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)", boxShadow: "0 2px 8px rgba(124,58,237,.3)" }}
+            className="flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-[10px]"
+            style={{ background: "#049fd9" }}
           >
-            S
+            <svg width="19" height="15" viewBox="0 0 19 15" fill="none" aria-hidden="true">
+              <rect width="19" height="3.2" rx="1.6" fill="white"/>
+              <rect y="5.9" width="13" height="3.2" rx="1.6" fill="white" opacity="0.78"/>
+              <rect y="11.8" width="7.5" height="3.2" rx="1.6" fill="white" opacity="0.55"/>
+            </svg>
           </div>
-          <div>
-            <p className="text-[15px] font-semibold tracking-tight" style={{ color: "var(--ink)" }}>StockTrail</p>
-            <p className="text-[10px] font-semibold tracking-widest uppercase" style={{ color: "var(--muted-raw)" }}>Inventory</p>
-          </div>
+          {!iconOnly && (
+            <div>
+              <p className="font-display text-[15px] font-bold" style={{ color: "var(--ink)", letterSpacing: "-0.4px", lineHeight: "1.15" }}>
+                StockTrail
+              </p>
+              <p className="label-caps" style={{ marginTop: 2 }}>
+                Inventory
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const active = pathname?.startsWith(item.href);
+        {/* Nav groups */}
+        <nav
+          className={cn("flex-1 overflow-y-auto", iconOnly ? "px-[7px] py-2" : "px-3 py-2")}
+          style={{ scrollbarWidth: "none" }}
+        >
+          {NAV_GROUPS.map((group, gi) => {
+            const visible = group.items.filter(item => !item.roles || item.roles.includes(role));
+            if (visible.length === 0) return null;
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium transition-all duration-150"
-                style={
-                  active
-                    ? {
-                        backgroundColor: hexToRgba(item.color, 0.12),
-                        color: item.color,
-                        borderLeft: `2.5px solid ${item.color}`,
-                        paddingLeft: "10px",
-                      }
-                    : {
-                        color: "var(--muted-raw)",
-                        borderLeft: "2.5px solid transparent",
-                      }
-                }
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = "var(--hover)";
-                    (e.currentTarget as HTMLElement).style.color = "var(--ink-2)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
-                    (e.currentTarget as HTMLElement).style.color = "var(--muted-raw)";
-                  }
-                }}
-              >
-                <Icon
-                  size={17}
-                  style={{ color: active ? item.color : "var(--muted-raw)", flexShrink: 0 }}
-                />
-                <span className="flex-1 truncate">{item.label}</span>
-                {item.href === "/alerts" && (
-                  <span
-                    className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
-                    style={{ backgroundColor: "#ef4444" }}
+              <div key={group.label} style={{ marginBottom: iconOnly ? 4 : 0 }}>
+                {/* Section header — hidden in icon-only mode */}
+                {!iconOnly && (
+                  <p
+                    className="label-caps"
+                    style={{ padding: gi === 0 ? "8px 10px 4px" : "16px 10px 4px" }}
                   >
-                    !
-                  </span>
+                    {group.label}
+                  </p>
                 )}
-              </Link>
+
+                {iconOnly && gi > 0 && (
+                  <div style={{ height: 1, background: "var(--line)", margin: "6px 4px" }} />
+                )}
+
+                <div className="space-y-[2px]">
+                  {visible.map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname?.startsWith(item.href);
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        title={iconOnly ? item.label : undefined}
+                        className={cn(
+                          "flex items-center rounded-[8px] text-[13px] transition-all duration-100",
+                          iconOnly ? "justify-center px-2 py-[9px]" : "gap-[9px] px-[9px] py-[7px]"
+                        )}
+                        style={
+                          active
+                            ? {
+                                backgroundColor: "rgba(4,159,217,0.09)",
+                                color: "var(--primary-hex)",
+                                fontWeight: 600,
+                              }
+                            : { color: "var(--ink-2)" }
+                        }
+                        onMouseEnter={(e) => {
+                          if (!active) {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = "var(--hover)";
+                            (e.currentTarget as HTMLElement).style.color = "var(--ink)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!active) {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                            (e.currentTarget as HTMLElement).style.color = "var(--ink-2)";
+                          }
+                        }}
+                      >
+                        <Icon
+                          size={16}
+                          strokeWidth={active ? 2.2 : 1.9}
+                          style={{
+                            color: active ? "var(--primary-hex)" : "var(--muted-raw)",
+                            flexShrink: 0,
+                          }}
+                        />
+                        {!iconOnly && (
+                          <span className="flex-1 truncate">{item.label}</span>
+                        )}
+                        {!iconOnly && item.href === "/alerts" && alertCount > 0 && (
+                          <span
+                            className="flex h-[17px] min-w-[17px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                            style={{ backgroundColor: "#ef4444", flexShrink: 0 }}
+                          >
+                            {alertCount > 99 ? "99+" : alertCount}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
 
         {/* Footer */}
         <div
-          className="flex-shrink-0 p-3 space-y-1"
+          data-sidebar-footer=""
+          className={cn("flex-shrink-0 space-y-0.5", iconOnly ? "p-2" : "p-3")}
           style={{ borderTop: "1px solid var(--line)" }}
         >
-          <div className="flex items-center gap-3 rounded-xl px-3 py-2">
+          {/* User row */}
+          <div
+            className={cn(
+              "flex items-center rounded-[8px] py-2 cursor-pointer transition-colors duration-100",
+              iconOnly ? "justify-center px-2" : "px-2 gap-[10px]"
+            )}
+            title={iconOnly ? (session?.user?.name ?? "") : undefined}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "var(--hover)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "transparent"; }}
+          >
             <div
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #9333ea)" }}
+              className="flex h-[32px] w-[32px] flex-shrink-0 items-center justify-center rounded-full text-[11.5px] font-bold text-white"
+              style={{ background: "var(--gradient-primary)" }}
             >
               {initials}
             </div>
-            <div className="min-w-0">
-              <p className="text-[13px] font-medium truncate" style={{ color: "var(--ink)" }}>{session?.user?.name}</p>
-              <span
-                className="inline-block text-[10px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded-full"
-                style={{ backgroundColor: "rgba(124,58,237,.1)", color: "var(--primary-hex)" }}
-              >
-                {role}
-              </span>
-            </div>
+            {!iconOnly && (
+              <div className="min-w-0 flex-1">
+                <p className="text-[12.5px] font-semibold truncate" style={{ color: "var(--ink)", lineHeight: "1.25" }}>
+                  {session?.user?.name}
+                </p>
+                <span
+                  className="inline-block text-[9px] font-bold tracking-[0.7px] uppercase px-[6px] py-[1px] rounded-[4px] mt-[2px]"
+                  style={{ backgroundColor: "rgba(4,159,217,.10)", color: "var(--primary-hex)" }}
+                >
+                  {role}
+                </span>
+              </div>
+            )}
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-150 hover:bg-[var(--hover)]"
-            style={{ color: "var(--muted-raw)" }}
-          >
-            <LogOut size={16} />
-            Sign out
-          </button>
+
+          {/* Sign out */}
+          {!iconOnly && (
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="flex w-full items-center gap-[9px] rounded-[8px] px-2 py-[7px] text-[12.5px] font-medium transition-all duration-100"
+              style={{ color: "var(--muted-raw)" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = "var(--hover)";
+                (e.currentTarget as HTMLElement).style.color = "var(--ink)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "var(--muted-raw)";
+              }}
+            >
+              <LogOut size={15} />
+              Sign out
+            </button>
+          )}
         </div>
       </aside>
 
       {open && (
-        <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} />
+        <div
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+          onClick={() => setOpen(false)}
+        />
       )}
     </>
   );

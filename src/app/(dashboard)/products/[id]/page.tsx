@@ -6,6 +6,9 @@ import { connectDB, toClient } from "@/lib/mongodb";
 import { Product } from "@/lib/models/Product";
 import { Stock } from "@/lib/models/Stock";
 import { StockMovement } from "@/lib/models/StockMovement";
+import "@/lib/models/Location";
+import "@/lib/models/User";
+import "@/lib/models/Supplier";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { notFound } from "next/navigation";
 

@@ -15,8 +15,9 @@ export function AddLocationDialog() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setLoading(true);
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const res = await fetch("/api/locations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

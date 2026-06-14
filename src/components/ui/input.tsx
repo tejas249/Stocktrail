@@ -6,7 +6,7 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
     <input
       ref={ref}
       className={cn(
-        "flex h-10 w-full rounded-[10px] border px-3 py-2 text-sm transition-shadow duration-150 placeholder:text-[var(--muted-raw)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(124,58,237,.2)] disabled:opacity-50",
+        "flex h-10 w-full rounded-[10px] border px-3 py-2 text-sm transition-all duration-150 placeholder:text-[var(--muted-raw)] focus-visible:outline-none focus-visible:border-[var(--primary-hex)] focus-visible:shadow-[0_0_0_3px_var(--primary-soft)] disabled:opacity-50",
         className
       )}
       style={{ borderColor: "var(--line)", backgroundColor: "white", color: "var(--ink)" }}
@@ -43,48 +43,44 @@ type BadgeVariant =
 
 const badgeStyles: Record<BadgeVariant, React.CSSProperties> = {
   default: {
-    backgroundColor: "#f1f5f9",
-    color: "#475569",
-    border: "1px solid #e2e8f0",
+    backgroundColor: "rgba(100,116,139,.08)",
+    color: "var(--muted-raw)",
+    border: "1px solid var(--line)",
   },
   success: {
-    backgroundColor: "#dcfce7",
-    color: "#15803d",
-    border: "1px solid #bbf7d0",
+    backgroundColor: "rgba(34,197,94,.08)",
+    color: "#16a34a",
+    border: "1px solid #22c55e",
   },
   warning: {
-    backgroundColor: "#fef9c3",
-    color: "#a16207",
-    border: "1px solid #fde68a",
+    backgroundColor: "rgba(245,158,11,.08)",
+    color: "#b45309",
+    border: "1px solid #f59e0b",
   },
   destructive: {
-    backgroundColor: "#fee2e2",
-    color: "#b91c1c",
-    border: "1px solid #fecaca",
-  },
-  /* filled green */
-  "movement-in": {
-    backgroundColor: "#22c55e",
-    color: "#fff",
-    border: "none",
-  },
-  /* filled sky */
-  "movement-transfer-in": {
-    backgroundColor: "#0ea5e9",
-    color: "#fff",
-    border: "none",
-  },
-  /* outline rose */
-  "movement-out": {
-    backgroundColor: "transparent",
-    color: "#f43f5e",
+    backgroundColor: "rgba(244,63,94,.08)",
+    color: "#e11d48",
     border: "1px solid #f43f5e",
   },
-  /* outline amber */
-  "movement-transfer-out": {
-    backgroundColor: "transparent",
-    color: "#f59e0b",
+  "movement-in": {
+    backgroundColor: "rgba(34,197,94,.08)",
+    color: "#16a34a",
+    border: "1px solid #22c55e",
+  },
+  "movement-transfer-in": {
+    backgroundColor: "rgba(14,165,233,.08)",
+    color: "#0284c7",
+    border: "1px solid #0ea5e9",
+  },
+  "movement-out": {
+    backgroundColor: "rgba(245,158,11,.08)",
+    color: "#b45309",
     border: "1px solid #f59e0b",
+  },
+  "movement-transfer-out": {
+    backgroundColor: "rgba(139,92,246,.08)",
+    color: "#7c3aed",
+    border: "1px solid #8b5cf6",
   },
 };
 
@@ -96,7 +92,7 @@ function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide",
+        "inline-flex items-center rounded-full px-[9px] py-[3px] text-[11px] font-bold whitespace-nowrap",
         className
       )}
       style={badgeStyles[variant]}

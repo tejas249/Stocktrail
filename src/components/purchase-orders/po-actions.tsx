@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { LocationCombobox, getOrCreateLocationId } from "@/components/ui/location-combobox";
+import type { SelectedLocation } from "@/components/ui/location-combobox";
 import { toast } from "sonner";
 
 type Location = { id: string; name: string };
@@ -11,6 +14,8 @@ type PO = { id: string; status: string };
 export function POActions({ po, locations }: { po: PO; locations: Location[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  const [receiveLocation, setReceiveLocation] = useState<SelectedLocation | null>(null);
 
   async function updateStatus(status: string, locationId?: string) {
     setLoading(true);
@@ -20,10 +25,18 @@ export function POActions({ po, locations }: { po: PO; locations: Location[] }) 
       body: JSON.stringify({ status, locationId }),
     });
     setLoading(false);
-
     if (!res.ok) { toast.error("Action failed"); return; }
     toast.success(`Marked as ${status}`);
     router.refresh();
+  }
+
+  async function handleReceiveConfirm() {
+    if (!receiveLocation) { toast.error("Select a location"); return; }
+    const locationId = await getOrCreateLocationId(receiveLocation);
+    if (!locationId) { toast.error("Could not resolve location — check permissions"); return; }
+    setReceiveOpen(false);
+    setReceiveLocation(null);
+    await updateStatus("RECEIVED", locationId);
   }
 
   if (po.status === "RECEIVED" || po.status === "CANCELLED") return null;
@@ -35,17 +48,37 @@ export function POActions({ po, locations }: { po: PO; locations: Location[] }) 
           Mark Ordered
         </Button>
       )}
-      <select
-        className="h-8 rounded-md border border-border bg-background px-2 text-xs"
-        disabled={loading}
-        defaultValue=""
-        onChange={(e) => {
-          if (e.target.value) updateStatus("RECEIVED", e.target.value);
-        }}
-      >
-        <option value="">Receive into...</option>
-        {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-      </select>
+
+      <Dialog open={receiveOpen} onOpenChange={(o) => { setReceiveOpen(o); if (!o) setReceiveLocation(null); }}>
+        <DialogTrigger asChild>
+          <Button size="sm" disabled={loading}>
+            Receive PO
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Receive Purchase Order</DialogTitle>
+          </DialogHeader>
+          <p className="text-[13px]" style={{ color: "var(--muted-raw)" }}>
+            Select the warehouse / location where this stock is being received.
+          </p>
+          <LocationCombobox
+            label="Destination Location"
+            dbLocations={locations}
+            value={receiveLocation}
+            onChange={setReceiveLocation}
+            placeholder="Search cities, warehouses…"
+          />
+          <Button
+            className="w-full mt-2"
+            disabled={loading || !receiveLocation}
+            onClick={handleReceiveConfirm}
+          >
+            {loading ? "Processing…" : "Confirm Receive"}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       <Button size="sm" variant="ghost" disabled={loading} onClick={() => updateStatus("CANCELLED")}>
         Cancel
       </Button>

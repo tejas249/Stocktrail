@@ -1,70 +1,167 @@
 "use client";
 
-import { Search, Bell } from "lucide-react";
+import { Search, Bell, Layers, LayoutGrid, Zap, Gem, ChevronRight } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useLayoutMode, type LayoutMode } from "./layout-mode";
 
-export function Topbar({ title }: { title: string }) {
+const MODES: { id: LayoutMode; icon: React.ElementType; label: string }[] = [
+  { id: "classic", icon: Layers,      label: "Classic Stack"   },
+  { id: "command", icon: LayoutGrid,  label: "Command Center"  },
+  { id: "triage",  icon: Zap,         label: "Action-First"    },
+];
+
+export function Topbar({ title, actions }: { title: string; actions?: React.ReactNode }) {
   const { data: session } = useSession();
+  const { mode, setMode, isGlass, toggleGlass } = useLayoutMode();
+
   const initials = session?.user?.name
     ? session.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : "?";
 
   return (
     <div
-      className="sticky top-0 z-30 flex h-16 items-center justify-between px-6"
-      style={{
-        borderBottom: "1px solid var(--line)",
-        backgroundColor: "rgba(247,247,251,0.85)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
+      className="sticky top-0 z-30 flex h-[62px] items-center gap-4 px-6 transition-all duration-300"
+      style={
+        isGlass
+          ? {
+              borderBottom: "1px solid rgba(255,255,255,0.10)",
+              backgroundColor: "rgba(10,6,25,0.60)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+            }
+          : {
+              borderBottom: "1px solid var(--line)",
+              backgroundColor: "rgba(254,252,248,0.96)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+            }
+      }
     >
-      {/* Left: breadcrumb + title */}
-      <div className="pl-10 md:pl-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--muted-2)" }}>
-          StockTrail /&nbsp;
-          <span style={{ color: "var(--primary-hex)" }}>{title}</span>
-        </p>
-        <h1 className="text-[17px] font-bold leading-tight tracking-tight" style={{ color: "var(--ink)" }}>
-          {title}
-        </h1>
+      {/* Left: accent bar + breadcrumb + title */}
+      <div className="flex items-center gap-3 pl-10 md:pl-0 flex-1 min-w-0">
+        {/* Vertical accent bar */}
+        <div
+          className="hidden md:block flex-shrink-0 rounded-full"
+          style={{ width: 3, height: 32, background: "var(--primary-hex)", opacity: 0.85 }}
+        />
+
+        <div className="min-w-0">
+          {/* Breadcrumb row */}
+          <div className="hidden sm:flex items-center gap-1" style={{ marginBottom: 2 }}>
+            <span className="text-[10.5px] font-medium" style={{ color: "var(--muted-2)" }}>
+              StockTrail
+            </span>
+            <ChevronRight size={10} style={{ color: "var(--muted-2)", opacity: 0.45, flexShrink: 0 }} />
+            <span className="text-[10.5px] font-semibold" style={{ color: "var(--primary-hex)" }}>
+              {title}
+            </span>
+          </div>
+
+          {/* Page title */}
+          <h1
+            className="font-display text-[20px] font-bold leading-none truncate"
+            style={{ color: "var(--ink)", letterSpacing: "-0.5px" }}
+          >
+            {title}
+          </h1>
+        </div>
       </div>
 
-      {/* Right: search + bell + avatar */}
-      <div className="flex items-center gap-2.5">
+      {/* Right: action slots + controls */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+
+        {/* Page-level action buttons */}
+        {actions && (
+          <>
+            <div className="flex items-center gap-2">{actions}</div>
+            <div className="w-px h-5 mx-1" style={{ background: "var(--line)" }} />
+          </>
+        )}
+
+        {/* View controls: mode switcher + glass toggle */}
+        <div className="hidden md:flex items-center gap-1.5">
+          <div
+            className="flex items-center rounded-[7px] border p-[3px] gap-[2px] transition-all duration-300"
+            style={
+              isGlass
+                ? { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)" }
+                : { borderColor: "var(--line)", backgroundColor: "var(--bg)" }
+            }
+          >
+            {MODES.map(({ id, icon: Icon, label }) => (
+              <button
+                key={id}
+                onClick={() => setMode(id)}
+                title={label}
+                aria-label={label}
+                className="flex items-center justify-center rounded-[5px] w-7 h-[22px] transition-all duration-150"
+                style={
+                  mode === id
+                    ? { backgroundColor: "var(--primary-hex)", color: "#fff" }
+                    : { color: "var(--muted-2)" }
+                }
+              >
+                <Icon size={12} />
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={toggleGlass}
+            title={isGlass ? "Disable Glass" : "Enable Glass"}
+            aria-label="Toggle Glassmorphism"
+            className="flex items-center justify-center rounded-[7px] w-[30px] h-[30px] border transition-all duration-300"
+            style={
+              isGlass
+                ? { backgroundColor: "rgba(139,92,246,0.15)", borderColor: "rgba(139,92,246,0.40)", color: "#c4b5fd" }
+                : { backgroundColor: "transparent", borderColor: "var(--line)", color: "var(--muted-2)" }
+            }
+          >
+            <Gem size={13} />
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="hidden md:block w-px h-5" style={{ background: "var(--line)" }} />
+
         {/* Search */}
         <label
-          className="hidden sm:flex items-center gap-2 h-9 rounded-[10px] border px-3 cursor-text transition-shadow duration-150 focus-within:ring-2 focus-within:ring-[rgba(124,58,237,.18)]"
-          style={{ borderColor: "var(--line)", backgroundColor: "var(--bg)" }}
+          className="hidden lg:flex items-center gap-2 h-[30px] w-[172px] rounded-[7px] border px-2.5 cursor-text transition-all duration-200 focus-within:w-[210px] focus-within:border-[var(--primary-hex)]"
+          style={
+            isGlass
+              ? { borderColor: "rgba(255,255,255,0.14)", backgroundColor: "rgba(255,255,255,0.07)" }
+              : { borderColor: "var(--line)", backgroundColor: "var(--bg)" }
+          }
         >
-          <Search size={14} style={{ color: "var(--muted-raw)", flexShrink: 0 }} />
+          <Search size={12} style={{ color: "var(--muted-2)", flexShrink: 0 }} />
           <input
             placeholder="Search…"
-            className="bg-transparent outline-none w-32 text-[13px] placeholder:text-[var(--muted-raw)]"
-            style={{ color: "var(--ink-2)" }}
+            className="bg-transparent outline-none flex-1 text-[12px] placeholder:text-[var(--muted-2)]"
+            style={{ color: "var(--ink)" }}
           />
         </label>
 
-        {/* Notification bell */}
+        {/* Bell */}
         <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-[10px] border transition-colors duration-150 hover:bg-[var(--hover)]"
-          style={{ borderColor: "var(--line)", backgroundColor: "var(--bg)" }}
+          className="relative flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border transition-all duration-150 hover:bg-[var(--hover)]"
+          style={
+            isGlass
+              ? { borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)" }
+              : { borderColor: "var(--line)", backgroundColor: "transparent" }
+          }
           aria-label="Notifications"
         >
-          <Bell size={16} style={{ color: "var(--muted-raw)" }} />
+          <Bell size={14} style={{ color: "var(--muted-raw)" }} />
           <span
-            className="absolute right-2 top-2 h-2 w-2 rounded-full ring-2 ring-[var(--bg)]"
-            style={{ backgroundColor: "var(--rose)" }}
+            className="absolute right-[7px] top-[6px] h-[6px] w-[6px] rounded-full"
+            style={{ backgroundColor: "#ef4444" }}
           />
         </button>
 
-        {/* User avatar */}
+        {/* Avatar */}
         <div
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white select-none"
-          style={{
-            background: "linear-gradient(135deg, #7c3aed, #9333ea)",
-            boxShadow: "0 2px 8px rgba(124,58,237,.35)",
-          }}
+          className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white select-none cursor-default hover:opacity-85 transition-opacity"
+          style={{ background: "var(--gradient-primary)" }}
           title={session?.user?.name ?? ""}
         >
           {initials}

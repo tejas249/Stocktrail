@@ -1,13 +1,12 @@
-import { Topbar } from "@/components/layout/topbar";
 import { connectDB, toClient } from "@/lib/mongodb";
 import { Product } from "@/lib/models/Product";
 import { Stock } from "@/lib/models/Stock";
 import { Supplier } from "@/lib/models/Supplier";
-import { ProductsTable } from "@/components/products/products-table";
-import { AddProductDialog } from "@/components/products/add-product-dialog";
-import { ImportProductsDialog } from "@/components/products/import-products-dialog";
+import "@/lib/models/Location";
+import { formatCurrency } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { ProductsPageClient } from "@/components/pages/products-client";
 
 export default async function ProductsPage() {
   const session = await getServerSession(authOptions);
@@ -31,25 +30,26 @@ export default async function ProductsPage() {
     stocks: stocksByProduct.get(p._id.toString()) || [],
   }));
 
+  let lowStockCount = 0;
+  let totalStockValue = 0;
+  let totalStockQty = 0;
+  for (const p of products) {
+    const qty = (p.stocks as any[]).reduce((s: number, st: any) => s + st.quantity, 0);
+    totalStockQty += qty;
+    totalStockValue += qty * (p.costPrice || 0);
+    if (qty <= (p.reorderThreshold || 0)) lowStockCount++;
+  }
+
   const canEdit = session?.user.role !== "VIEWER";
 
   return (
-    <div>
-      <Topbar title="Products" />
-      <div className="mx-auto max-w-[1180px] space-y-5 p-6">
-        <div className="flex items-center justify-between">
-          <p className="text-[13px] font-medium" style={{ color: "var(--muted-raw)" }}>
-            {products.length} product{products.length !== 1 ? "s" : ""} in catalog
-          </p>
-          {canEdit && (
-            <div className="flex gap-2">
-              <ImportProductsDialog />
-              <AddProductDialog suppliers={toClient(suppliersRaw)} />
-            </div>
-          )}
-        </div>
-        <ProductsTable products={toClient(products)} canEdit={canEdit} />
-      </div>
-    </div>
+    <ProductsPageClient
+      products={toClient(products)}
+      suppliers={toClient(suppliersRaw)}
+      lowStockCount={lowStockCount}
+      totalStockValue={totalStockValue}
+      totalStockQty={totalStockQty}
+      canEdit={canEdit}
+    />
   );
 }

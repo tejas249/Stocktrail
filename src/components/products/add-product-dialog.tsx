@@ -17,9 +17,10 @@ export function AddProductDialog({ suppliers }: { suppliers: Supplier[] }) {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     const payload = {
       name: formData.get("name"),
       sku: formData.get("sku"),
